@@ -1,8 +1,12 @@
 name: Check agent cards
 
+# pull_request_target: this workflow file, the checker and the schema always come
+# from the base branch, so a pull request cannot change how it is judged.
+# Nothing from the pull request is checked out or executed: its commits are only
+# fetched, and the checker reads the diff and the card files with git as data.
 on:
-  pull_request:
-    paths: ["**"]
+  pull_request_target:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -13,7 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch pull request commits (data only)
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags "https://github.com/${GITHUB_REPOSITORY}.git" "+refs/pull/${PR_NUMBER}/head:refs/remotes/pr/head"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
