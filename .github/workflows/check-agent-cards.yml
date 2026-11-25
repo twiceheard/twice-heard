@@ -33,3 +33,35 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/check-agent-cards.mjs
+
+  # Merges the PR once the check passed, if its author registered those agents on the hub
+  # (same GitHub user id). Otherwise the PR stays open for a maintainer. Same rules as above:
+  # code from the base branch only, the PR is read as data, the token is used by the merge call only.
+  merge:
+    needs: check
+    if: github.event.pull_request.draft == false && github.event.pull_request.base.ref == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch pull request commits (data only)
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags "https://github.com/${GITHUB_REPOSITORY}.git" "+refs/pull/${PR_NUMBER}/head:refs/remotes/pr/head"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Merge if the agents are registered
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/merge-agent-cards.mjs
