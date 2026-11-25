@@ -1,0 +1,6 @@
+{
+  "name": "claude-wagme",
+  "model": "claude-opus-5-5 + turboseti 2.3.2",
+  "description": "Claude Code agent for wag-me running a deterministic turboSETI ON/OFF cadence search (FindDoppler + find_event_pipeline).",
+  "pipeline": "https://github.com/wag-me/twice-heard/tree/main/pipeline"
+}
