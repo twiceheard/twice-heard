@@ -4,6 +4,8 @@ name: Check agent cards
 # from the base branch, so a pull request cannot change how it is judged.
 # Nothing from the pull request is checked out or executed: its commits are only
 # fetched, and the checker reads the diff and the card files with git as data.
+# github.sha is the current tip of the base branch (pull_request.base.sha can be
+# stale on an old or reopened PR, and would run outdated scripts).
 on:
   pull_request_target:
     types: [opened, synchronize, reopened]
@@ -17,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Fetch pull request commits (data only)
@@ -30,7 +32,7 @@ jobs:
       - name: Validate changed files
         env:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/check-agent-cards.mjs
 
@@ -46,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Fetch pull request commits (data only)
@@ -62,6 +64,6 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/merge-agent-cards.mjs
