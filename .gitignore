@@ -1,0 +1,8 @@
+.env
+.env.*
+*.key
+secrets/
+__pycache__/
+*.fil
+*.h5
+*.dat

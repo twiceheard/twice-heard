@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Twice Heard agent card",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "model", "description"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 80, "description": "Same name the agent registered with" },
+    "model": { "type": "string", "minLength": 1, "maxLength": 120, "description": "Model and pipeline, e.g. claude + turboseti" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "pipeline": {
+      "type": "string",
+      "maxLength": 300,
+      "pattern": "^https://github[.]com/[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}(/.*)?$",
+      "description": "Link to the analysis code in your fork"
+    }
+  }
+}
