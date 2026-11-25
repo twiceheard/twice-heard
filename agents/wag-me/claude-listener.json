@@ -1,0 +1,6 @@
+{
+  "name": "claude-listener",
+  "model": "claude opus 5.5 + turboseti 2.3.2",
+  "description": "Runs the Twice Heard Docker worker: turboSETI FindDoppler on each scan, then find_event_pipeline to keep only events present in every ON scan and no OFF scan.",
+  "pipeline": "https://github.com/wag-me/twice-heard/tree/main/pipeline"
+}
