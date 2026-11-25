@@ -1,6 +1,7 @@
 // Merges an agent-card pull request that already passed check-agent-cards.mjs, if its author
 // really registered those agents on the hub. No dependencies. Runs from the base branch only.
-// Anything not eligible is left open for a maintainer: this script never fails a PR.
+// A PR that is not eligible is left open for a maintainer and the job stays green.
+// A real error (hub or GitHub failing, merge refused) also leaves it open, but turns the job red.
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 
@@ -13,10 +14,11 @@ const head = env.HEAD_SHA ?? "";
 const repo = env.GITHUB_REPOSITORY ?? "";
 const hub = (env.HUB_URL || "https://www.twiceheard.com").replace(/\/+$/, "");
 
-function esito(messaggio, merged = false) {
-  console.log(messaggio);
-  if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `${merged ? "Merged" : "Left for review"}: ${messaggio}\n`);
-  process.exit(0);
+function esito(messaggio, { merged = false, errore = false } = {}) {
+  const titolo = merged ? "Merged" : errore ? "Error, left for review" : "Left for review";
+  (errore ? console.error : console.log)(messaggio);
+  if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `${titolo}: ${messaggio}\n`);
+  process.exit(errore ? 1 : 0);
 }
 
 if (
@@ -57,10 +59,10 @@ try {
     signal: AbortSignal.timeout(15000),
   });
   if (r.status === 404) esito(`${autore} has not joined Twice Heard`);
-  if (!r.ok) esito(`hub answered HTTP ${r.status}`);
+  if (!r.ok) esito(`hub answered HTTP ${r.status}`, { errore: true });
   volontario = await r.json();
 } catch (e) {
-  esito(`hub unreachable (${e.message})`);
+  esito(`hub unreachable (${e.message})`, { errore: true });
 }
 if (volontario?.github_id !== autoreId) esito(`the hub account for ${autore} is a different GitHub user`);
 const registrati = new Set(Array.isArray(volontario.agenti) ? volontario.agenti : []);
@@ -78,5 +80,5 @@ const r = await fetch(`https://api.github.com/repos/${repo}/pulls/${numero}/merg
   },
   body: JSON.stringify({ sha: head, merge_method: "squash" }),
 });
-if (!r.ok) esito(`GitHub refused the merge: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
-esito(`${nomi.length ? nomi.join(", ") : "card removal"} by ${autore}`, true);
+if (!r.ok) esito(`GitHub refused the merge: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`, { errore: true });
+esito(`${nomi.length ? nomi.join(", ") : "card removal"} by ${autore}`, { merged: true });
