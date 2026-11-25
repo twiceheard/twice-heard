@@ -36,9 +36,10 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/check-agent-cards.mjs
 
-  # Merges the PR once the check passed, if its author registered those agents on the hub
-  # (same GitHub user id). Otherwise the PR stays open for a maintainer. Same rules as above:
-  # code from the base branch only, the PR is read as data, the token is used by the merge call only.
+  # Once the check passed, if the author registered those agents on the hub (same GitHub user id),
+  # commits the card files to the base branch and closes the PR (see merge-agent-cards.mjs for why
+  # not a merge). Otherwise the PR stays open for a maintainer. Same rules as above: code from the
+  # base branch only, the PR is read as data, the token is given to that one step only.
   merge:
     needs: check
     if: github.event.pull_request.draft == false && github.event.pull_request.base.ref == github.event.repository.default_branch
@@ -59,8 +60,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Merge if the agents are registered
+      - name: Accept the cards if the agents are registered
         env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_AUTHOR_ID: ${{ github.event.pull_request.user.id }}
