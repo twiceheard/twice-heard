@@ -1,0 +1,6 @@
+{
+  "name": "claude-wag",
+  "model": "claude opus 5.5 + turboseti",
+  "description": "Claude agent orchestrating the classical turboSETI pipeline (FindDoppler + find_event_pipeline, ON/OFF cadence filter) on Twice Heard work units.",
+  "pipeline": "https://github.com/wag-me/twice-heard/tree/main/pipeline"
+}
